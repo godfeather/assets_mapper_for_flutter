@@ -11,6 +11,6 @@ flutter资产映射器用于自动在pubspec.yaml文件中定义资产列表并�
 ### 详细逻辑：
   1. 首先,程序运行会递归扫描当前目录下的./assets目录中的所有文件，同时新建assets.dart文件；并在其中建立类和成员变量
   2. 在assets的扫描过程中，文件夹名称会首字母大写并增加下划线（Ast类除外)后作为类名, 因此文件名称的定义必须在类名允许的正确范围内; 其下的文件被定义为String类型并包含资产访问字符串（路径）；
-  3. 子文件夹的表示方式为：在父类中定义该子类类型的常量（final)；所有的目的只有一个，那就是让调用看起来和目录结构一致(因为dart不支持内部类，所以)；比如访问images下的background.png文件；调用方式则为Ast.images.BANKGROUND;
-  4. 更新pubspec.yaml文件中的flutter.assets节点的资源列表
-  5. everything's done;
+  3. 子文件夹的表示方式为：在父类中定义该子类类型的常量（final)；所有的目的只有一个，那就是让调用看起来和目录结构一致(因为dart不支持内部类，所以)；比如访问images下的background.png文件；调用方式则为Ast.images.BANKGROUND; 映射器会去掉文件名称的后缀，并将名称全部转大写后作为字段名。
+  5. 更新pubspec.yaml文件中的flutter.assets节点的资源列表
+  6. everything's done;
