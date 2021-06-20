@@ -1,0 +1,120 @@
+#!/usr/local/bin/python3.9
+# -*- coding:utf8 -*-
+# 资源映射器
+# 自动生成/刷新flutter全局资源类文件;资源文件请放在根目录中使用assets
+# 目录名称请使用符合类名规范的名称
+# 文件名请使用符合字段名规范的名称
+# 文件需放在Flutter 项目的根目录执行（与pubspec.yaml同级目录）；执行后会在./lib下生成assets.dart文件，
+#   此时访问资源将不再需要拷贝冗长的路径了，直接使用类访问与assets目录结构相同的访问即可;
+#   同时执行该脚本也会自动更新pubspec.yaml文件中的资源定义
+
+
+# 【警告】：
+#   1. 执行命令前确保./lib/assets.dart文件为自动生成或不存在！因为接下来该文件将被覆盖！
+import os;
+import json;
+import re;
+import yaml;
+
+def logE (msg):
+    '''
+        打印错误日志
+    '''
+    print('\033[31m' + msg + '\033[00m');
+
+def mapping (path):
+    '''
+        返回目录的树形字典结构
+        path: 路径
+    '''
+    # 当前的映射器位置
+    c_Mapper = {}; 
+    fList = os.listdir(os.path.join(path));
+    for fEach in fList:
+        if os.path.isdir(os.path.join(path, fEach)):
+            c_Mapper[fEach] = mapping(os.path.join(path, fEach));
+        elif os.path.isfile(os.path.join(path, fEach)):
+            c_Mapper[fEach] = os.path.join(path, fEach);
+    return c_Mapper;
+
+def assets_cls_gen (name, mapper, file, depth = 1):
+    '''
+        根据json生成同等结构的类文件
+        name: 根类的名称, 若名称以$开头表示根类名
+        mapper: json结构的类模版
+        file: 文件对象，将内容写入到该对象
+        depth: 不需要传入, 由函数内部维护；表示递归层数
+    '''
+    cls_doc = '';
+    if type(mapper) is dict:
+        mapK = dict(mapper).keys(); 
+        if depth == 1: 
+            cls_doc += 'class %s {\n' % (covertClassName(name));
+        else:
+            cls_doc += 'class _%s {\n' % (covertClassName(name));
+        for k in mapK:
+            if type(mapper[k]) is dict:
+                assets_cls_gen(k, mapper[k], file, depth + 1);
+                if depth == 1: 
+                    cls_doc += '    static final _%s %s = _%s();\n' %(covertClassName(k), covertName(k), covertClassName(k));
+                else: 
+                    cls_doc += '    final _%s %s = _%s();\n' %(covertClassName(k), covertName(k), covertClassName(k));
+            else:
+                cls_doc += '    final String %s = \'%s\';\n' % (covertName(k), mapper[k]);
+        cls_doc += '}\n\n';
+        if file.writable():
+            file.write(cls_doc);
+        else:
+            logE("./lib/assets.dart 文件不可写入！");
+            exit(1);
+    else:
+        pass;
+def covertClassName (name):
+    '''
+        将名称转化为标准类名
+    '''
+    name = name[:1].upper() + name[1:];
+    return name;
+
+def covertName (name):
+    '''
+        将名称转换为合法的字段名
+    '''
+    name = name.replace('-', '_');
+    name = re.sub('\..*$', '', name);
+    name = name.upper();
+    return name;
+def updateAssetDefinition (assets):
+    '''
+        更新资源定义
+        assets: 资产列表
+    '''
+    with open ('./pubspec.yaml', 'r') as pubspec:
+        tempYaml = yaml.safe_load(pubspec);
+        tempYaml['flutter']["assets"] = assets;
+        with open ('./pubspec.yaml', 'w', 128, 'utf-8') as te: 
+            te.write(yaml.dump(tempYaml));
+
+def getAssetsList (mapper):
+    '''
+    递归目录映射器获取所有文件并返回
+    '''
+    list = [];
+    mK = mapper;
+    for k in mK: 
+        if type(mK[k]) is dict: 
+            children = getAssetsList(mK[k]);
+            list.extend(children); 
+        else: 
+            list.append(mK[k]);
+    return list;
+if os.path.exists('./assets') and os.path.isdir('./assets'): 
+    mapper = mapping('assets');
+    with open('./lib/assets.dart', 'w') as ast_file: 
+        assets_cls_gen('Ast', mapper, ast_file); 
+    updateAssetDefinition(getAssetsList(mapper));
+
+else: 
+    logE('资源文件不存在'); 
+    exit(1);
+    
