@@ -1,0 +1,2 @@
+# assets_mapper_for_flutter
+flutter项目的资产映射器
