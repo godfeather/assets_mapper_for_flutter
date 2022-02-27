@@ -62,7 +62,7 @@ def assets_cls_gen (name, mapper, file, depth = 1):
                 else: 
                     cls_doc += '    final _%s %s = _%s();\n' %(covertClassName(k), covertName(k), covertClassName(k));
             else:
-                cls_doc += '    final String %s = \'%s\';\n' % (covertName(k).upper(), mapper[k]);
+                cls_doc += '    %s final String %s = \'%s\';\n' % ('static' if depth == 1 else '', covertName(k).upper(), mapper[k]);
         cls_doc += '}\n\n';
         if file.writable():
             file.write(cls_doc);
