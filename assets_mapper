@@ -16,6 +16,8 @@ import json;
 import re;
 import yaml;
 import datetime as time;
+
+ignores=[];
 # 资产文件代码
 def logE (msg):
     '''
